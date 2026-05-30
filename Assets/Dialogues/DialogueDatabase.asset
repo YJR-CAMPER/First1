@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35fa61e376032174dbd141bcd881d963, type: 3}
+  m_Name: DialogueDatabase
+  m_EditorClassIdentifier: 
+  dialogues:
+  - id: dialogue_c7ac34a7
+    speakerName: "\uAE40\uC544\uBB34\uAC1C"
+    dialogueStyle: 0
+    portrait: {fileID: 0}
+    position: 0
+    dialogueText: "\uC548\uB155 \uB09C \uAE40\uC544\uBB34\uAC1C\uC57C"
+    nextDialogueId: 
+    eventName: 
+    choices:
+    - choiceText: "\uC8FD\uC778\uB2E4"
+      nextDialogueId: dialogue_86546c52
+      eventName: 
+      conditionFlag: 
+      requiredValue: 1
+    - choiceText: "\uC0B4\uB9B0\uB2E4"
+      nextDialogueId: dialogue_96d9e887
+      eventName: 
+      conditionFlag: 
+      requiredValue: 1
+    nodePosition: {x: 100, y: 100}
+  - id: dialogue_86546c52
+    speakerName: "\uAE40\uC544\uBB34\uAC1C"
+    dialogueStyle: 0
+    portrait: {fileID: 0}
+    position: 0
+    dialogueText: "\uC0B4\uB824\uC918!"
+    nextDialogueId: 
+    eventName: 
+    choices: []
+    nodePosition: {x: 391, y: -49}
+  - id: dialogue_96d9e887
+    speakerName: "\uAE40\uC544\uBB34\uAC1C"
+    dialogueStyle: 0
+    portrait: {fileID: 0}
+    position: 0
+    dialogueText: "\uACE0\uB9C8\uC6CC~"
+    nextDialogueId: 
+    eventName: 
+    choices: []
+    nodePosition: {x: 391, y: 160}
