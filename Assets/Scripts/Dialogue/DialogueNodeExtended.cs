@@ -1,13 +1,9 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public enum DialogueStyleType
-{
-    일반,
-    소리침,
-    생각
-}
-
+/// <summary>
+/// 개별 대화 노드 데이터
+/// </summary>
 [System.Serializable]
 public class DialogueNodeExtended
 {
@@ -34,26 +30,4 @@ public class DialogueNodeExtended
     /// </summary>
     [HideInInspector]
     public Vector2 nodePosition;
-}
-
-[System.Serializable]
-public class DialogueChoiceExtended
-{
-    public string choiceText;
-    public string nextDialogueId;
-    public string eventName;
-    public string conditionFlag;
-    public bool requiredValue = true;
-}
-
-[System.Serializable]
-public class DialogueStyle
-{
-    public DialogueStyleType styleType;
-    public Sprite panelSprite;
-    public Color textColor = Color.black;
-    public Color speakerNameColor = Color.black;
-    public bool enableShake = false;
-    public float shakeIntensity = 5f;
-    public float panelScale = 1.0f;
 }

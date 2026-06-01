@@ -87,6 +87,15 @@ public class DialogueTriggerByID : MonoBehaviour
         hasTriggered = false;
     }
 
+    /// <summary>
+    /// 외부(NPCSetupHelper 등)에서 InteractPrompt를 할당할 수 있는 공개 세터
+    /// Reflection 없이 안전하게 접근 가능
+    /// </summary>
+    public void SetInteractPrompt(GameObject prompt)
+    {
+        interactPrompt = prompt;
+    }
+
     public void ResetDialogue()
     {
         hasTriggered = false;

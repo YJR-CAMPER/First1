@@ -8,10 +8,8 @@ using UnityEngine.Events;
 /// 대화 시스템의 진행 흐름을 조율하는 매니저
 /// UI 표시, 타이핑, 초상화, 선택지는 각각의 헬퍼 클래스에 위임
 /// </summary>
-public class DialogueManager : MonoBehaviour
+public class DialogueManager : SingletonMonoBehaviour<DialogueManager>
 {
-    public static DialogueManager Instance { get; private set; }
-
     [Header("Dialogue UI")]
     [SerializeField] private GameObject dialoguePanel;
     [SerializeField] private Image dialoguePanelBackground;
@@ -57,18 +55,8 @@ public class DialogueManager : MonoBehaviour
     private Coroutine shakeCoroutine;
     private Vector3 originalPanelPosition;
 
-    private void Awake()
+    protected override void OnSingletonAwake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-            return;
-        }
-
         InitializeComponents();
     }
 
@@ -98,29 +86,35 @@ public class DialogueManager : MonoBehaviour
 
     // -- Public API --
 
+    /// <summary>
+    /// 새 대화를 시작한다 (OnDialogueStart 이벤트 1회 발화)
+    /// 대화 중 다음 노드로의 진행은 내부에서 처리
+    /// </summary>
     public void StartDialogue(DialogueNodeExtended dialogue)
     {
         if (dialogue == null)
             return;
 
-        currentDialogue = dialogue;
         isDialogueActive = true;
 
         dialoguePanel.SetActive(true);
         choicePresenter.Hide();
 
         OnDialogueStart?.Invoke();
-        DisplayCurrentDialogue();
+        ShowDialogueNode(dialogue);
     }
 
     public bool IsDialogueActive() => isDialogueActive;
 
     // -- Dialogue Display --
 
-    private void DisplayCurrentDialogue()
+    /// <summary>
+    /// 현재 노드를 화면에 표시한다
+    /// StartDialogue와 분리하여 OnDialogueStart 중복 발화를 방지
+    /// </summary>
+    private void ShowDialogueNode(DialogueNodeExtended dialogue)
     {
-        if (currentDialogue == null)
-            return;
+        currentDialogue = dialogue;
 
         if (speakerNameText != null)
             speakerNameText.text = currentDialogue.speakerName;
@@ -202,7 +196,9 @@ public class DialogueManager : MonoBehaviour
         var nextDialogue = DialogueDatabaseManagerExtended.Instance.GetDialogue(nextDialogueId);
         if (nextDialogue != null)
         {
-            StartDialogue(nextDialogue);
+            dialoguePanel.SetActive(true);
+            choicePresenter.Hide();
+            ShowDialogueNode(nextDialogue);
         }
         else
         {

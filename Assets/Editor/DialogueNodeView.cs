@@ -64,9 +64,9 @@ public class DialogueNodeView : Node
         styleLabel.style.marginTop = 5;
         container.Add(styleLabel);
 
-        string textPreview = dialogue.dialogueText.Length > 50
+        string textPreview = dialogue.dialogueText != null && dialogue.dialogueText.Length > 50
             ? dialogue.dialogueText.Substring(0, 50) + "..."
-            : dialogue.dialogueText;
+            : dialogue.dialogueText ?? "";
 
         var textLabel = new Label(textPreview);
         textLabel.style.fontSize = 11;
@@ -90,13 +90,11 @@ public class DialogueNodeView : Node
         if (dialogue.choices == null)
             dialogue.choices = new List<DialogueChoiceExtended>();
 
-        if (!string.IsNullOrEmpty(dialogue.nextDialogueId))
-        {
-            var nextPort = Port.Create<Edge>(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(bool));
-            nextPort.portName = "Next";
-            nextPort.name = "next_port";
-            outputContainer.Add(nextPort);
-        }
+        // Next 포트는 항상 생성하여 새 노드에서도 연결 가능하게 함
+        var nextPort = Port.Create<Edge>(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(bool));
+        nextPort.portName = "Next";
+        nextPort.name = "next_port";
+        outputContainer.Add(nextPort);
 
         for (int i = 0; i < dialogue.choices.Count; i++)
         {

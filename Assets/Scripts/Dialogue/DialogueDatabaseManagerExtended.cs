@@ -6,27 +6,16 @@ using System.Linq;
 /// 대화 데이터베이스의 로드 및 ID 기반 조회만 담당
 /// 대화 시작 로직은 호출자가 직접 DialogueManager에 전달
 /// </summary>
-public class DialogueDatabaseManagerExtended : MonoBehaviour
+public class DialogueDatabaseManagerExtended : SingletonMonoBehaviour<DialogueDatabaseManagerExtended>
 {
-    public static DialogueDatabaseManagerExtended Instance { get; private set; }
-
     [SerializeField] private DialogueDatabaseExtended database;
 
     private Dictionary<string, DialogueNodeExtended> dialogueLookup;
 
-    private void Awake()
-    {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-            return;
-        }
+    protected override bool Persist => true;
 
+    protected override void OnSingletonAwake()
+    {
         BuildLookup();
     }
 
