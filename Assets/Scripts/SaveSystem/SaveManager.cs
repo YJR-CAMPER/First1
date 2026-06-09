@@ -158,6 +158,7 @@ public class SaveManager : SingletonMonoBehaviour<SaveManager>
         currentSaveData.metadata.saveName = $"Slot {slotIndex + 1}";
         currentSaveData.metadata.UpdateTimestamp();
         currentSaveData.metadata.playTime = Time.realtimeSinceStartup - sessionStartTime;
+        currentSaveData.metadata.sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
     }
 
     private bool ValidateSlotIndex(int slotIndex)

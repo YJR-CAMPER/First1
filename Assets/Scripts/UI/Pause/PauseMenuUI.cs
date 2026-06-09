@@ -4,22 +4,30 @@ using UnityEngine.SceneManagement;
 
 /// <summary>
 /// 일시정지 메뉴 UI 컨트롤러
+/// Resume, Settings, Save, Load, MainMenu, Quit 버튼 관리
 /// </summary>
 public class PauseMenuUI : MonoBehaviour
 {
     [Header("Panels")]
     [SerializeField] private GameObject pauseMenuPanel;
     [SerializeField] private GameObject settingsPanel;
-    
+
+    [Header("Save/Load")]
+    [SerializeField] private SaveLoadUI saveLoadUI;
+
     [Header("Buttons")]
     [SerializeField] private Button resumeButton;
     [SerializeField] private Button settingsButton;
+    [SerializeField] private Button saveButton;
+    [SerializeField] private Button loadButton;
     [SerializeField] private Button mainMenuButton;
     [SerializeField] private Button quitButton;
-    
+
     [Header("Settings")]
     [SerializeField] private string mainMenuSceneName = "MainMenu";
     [SerializeField] private KeyCode pauseKey = KeyCode.Escape;
+
+    private bool isSubscribed;
 
     private void Awake()
     {
@@ -27,12 +35,14 @@ public class PauseMenuUI : MonoBehaviour
         HideAllPanels();
     }
 
+    private void Start()
+    {
+        TrySubscribe();
+    }
+
     private void OnEnable()
     {
-        if (PauseManager.Instance != null)
-        {
-            PauseManager.Instance.OnPauseStateChanged += HandlePauseStateChanged;
-        }
+        TrySubscribe();
     }
 
     private void OnDisable()
@@ -40,6 +50,29 @@ public class PauseMenuUI : MonoBehaviour
         if (PauseManager.Instance != null)
         {
             PauseManager.Instance.OnPauseStateChanged -= HandlePauseStateChanged;
+            isSubscribed = false;
+        }
+
+        if (saveLoadUI != null)
+        {
+            saveLoadUI.OnBackRequested -= OnSaveLoadBack;
+        }
+    }
+
+    private void TrySubscribe()
+    {
+        if (isSubscribed)
+            return;
+
+        if (PauseManager.Instance == null)
+            return;
+
+        PauseManager.Instance.OnPauseStateChanged += HandlePauseStateChanged;
+        isSubscribed = true;
+
+        if (saveLoadUI != null)
+        {
+            saveLoadUI.OnBackRequested += OnSaveLoadBack;
         }
     }
 
@@ -55,25 +88,38 @@ public class PauseMenuUI : MonoBehaviour
     {
         if (resumeButton != null)
             resumeButton.onClick.AddListener(OnResumeClicked);
-        
+
         if (settingsButton != null)
             settingsButton.onClick.AddListener(OnSettingsClicked);
-        
+
+        if (saveButton != null)
+            saveButton.onClick.AddListener(OnSaveClicked);
+
+        if (loadButton != null)
+            loadButton.onClick.AddListener(OnLoadClicked);
+
         if (mainMenuButton != null)
             mainMenuButton.onClick.AddListener(OnMainMenuClicked);
-        
+
         if (quitButton != null)
             quitButton.onClick.AddListener(OnQuitClicked);
     }
 
     private void OnPauseInput()
     {
+        if (saveLoadUI != null && saveLoadUI.gameObject.activeInHierarchy)
+        {
+            saveLoadUI.Hide();
+            ShowPauseMenu();
+            return;
+        }
+
         if (settingsPanel != null && settingsPanel.activeSelf)
         {
             CloseSettings();
             return;
         }
-        
+
         if (PauseManager.Instance != null)
         {
             PauseManager.Instance.TogglePause();
@@ -92,19 +138,27 @@ public class PauseMenuUI : MonoBehaviour
     {
         if (pauseMenuPanel != null)
             pauseMenuPanel.SetActive(true);
-        
+
         if (settingsPanel != null)
             settingsPanel.SetActive(false);
+
+        if (saveLoadUI != null)
+            saveLoadUI.Hide();
     }
 
     private void HideAllPanels()
     {
         if (pauseMenuPanel != null)
             pauseMenuPanel.SetActive(false);
-        
+
         if (settingsPanel != null)
             settingsPanel.SetActive(false);
+
+        if (saveLoadUI != null)
+            saveLoadUI.Hide();
     }
+
+    // -- Button Handlers --
 
     private void OnResumeClicked()
     {
@@ -118,18 +172,41 @@ public class PauseMenuUI : MonoBehaviour
     {
         if (pauseMenuPanel != null)
             pauseMenuPanel.SetActive(false);
-        
+
         if (settingsPanel != null)
             settingsPanel.SetActive(true);
+    }
+
+    private void OnSaveClicked()
+    {
+        if (pauseMenuPanel != null)
+            pauseMenuPanel.SetActive(false);
+
+        if (saveLoadUI != null)
+            saveLoadUI.OpenSave();
+    }
+
+    private void OnLoadClicked()
+    {
+        if (pauseMenuPanel != null)
+            pauseMenuPanel.SetActive(false);
+
+        if (saveLoadUI != null)
+            saveLoadUI.OpenLoad();
     }
 
     public void CloseSettings()
     {
         if (settingsPanel != null)
             settingsPanel.SetActive(false);
-        
+
         if (pauseMenuPanel != null)
             pauseMenuPanel.SetActive(true);
+    }
+
+    private void OnSaveLoadBack()
+    {
+        ShowPauseMenu();
     }
 
     private void OnMainMenuClicked()
