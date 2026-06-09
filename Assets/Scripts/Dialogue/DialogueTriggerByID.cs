@@ -1,11 +1,22 @@
+using System;
 using UnityEngine;
 
 /// <summary>
 /// NPC에 부착하여 ID 기반으로 대화를 시작하는 트리거
+/// QuestManager를 직접 참조하지 않고 정적 이벤트로 통보
 /// </summary>
 public class DialogueTriggerByID : MonoBehaviour
 {
+    /// <summary>
+    /// NPC 대화 완료 시 발화. QuestManager 등 외부 시스템이 구독.
+    /// </summary>
+    public static event Action<string> OnNPCTalkedTo;
+
     [SerializeField] private string dialogueId;
+
+    [Header("NPC Identity")]
+    [Tooltip("이 NPC의 고유 ID (퀘스트 Talk 목표의 targetId와 매칭)")]
+    [SerializeField] private string npcId;
 
     [Header("Repeat Settings")]
     [SerializeField] private bool canRepeat = true;
@@ -79,6 +90,11 @@ public class DialogueTriggerByID : MonoBehaviour
 
         DialogueManager.Instance.StartDialogue(dialogue);
         hasTriggered = true;
+
+        if (!string.IsNullOrEmpty(npcId))
+        {
+            OnNPCTalkedTo?.Invoke(npcId);
+        }
     }
 
     public void SetDialogueId(string newDialogueId)
@@ -87,10 +103,6 @@ public class DialogueTriggerByID : MonoBehaviour
         hasTriggered = false;
     }
 
-    /// <summary>
-    /// 외부(NPCSetupHelper 등)에서 InteractPrompt를 할당할 수 있는 공개 세터
-    /// Reflection 없이 안전하게 접근 가능
-    /// </summary>
     public void SetInteractPrompt(GameObject prompt)
     {
         interactPrompt = prompt;
@@ -100,6 +112,8 @@ public class DialogueTriggerByID : MonoBehaviour
     {
         hasTriggered = false;
     }
+
+    public string NpcId => npcId;
 
     private void UpdateInteractPrompt()
     {

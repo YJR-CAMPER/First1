@@ -6,13 +6,12 @@ using UnityEngine;
 /// 이벤트 문자열 규약:
 ///   "quest_start:{questId}"              - 퀘스트 시작
 ///   "quest_complete:{questId}"           - 퀘스트 강제 완료
-///   "quest_objective:{questId}:{objId}"  - 목표 완료 (Talk, GoTo 등)
+///   "quest_fail:{questId}"              - 퀘스트 실패
 ///   "quest_progress:{questId}:{objId}:{amount}" - 목표 진행 (Collect 등)
 ///   "flag_set:{flagName}"               - 스토리 플래그 설정
 ///   "flag_clear:{flagName}"             - 스토리 플래그 해제
 /// 
-/// Setup:
-///   DialogueManager의 OnDialogueEvent에 HandleDialogueEvent를 연결
+/// Talk/GoTo 목표는 자동 매칭이므로 이벤트 문자열 불필요.
 /// </summary>
 public class QuestEventBridge : MonoBehaviour
 {
@@ -20,7 +19,6 @@ public class QuestEventBridge : MonoBehaviour
 
     /// <summary>
     /// DialogueManager.OnDialogueEvent에 연결할 public 메서드
-    /// Inspector에서 UnityEvent 리스너로 할당
     /// </summary>
     public void HandleDialogueEvent(string eventString)
     {
@@ -43,8 +41,8 @@ public class QuestEventBridge : MonoBehaviour
                 HandleQuestComplete(parts);
                 break;
 
-            case "quest_objective":
-                HandleObjectiveComplete(parts);
+            case "quest_fail":
+                HandleQuestFail(parts);
                 break;
 
             case "quest_progress":
@@ -65,10 +63,9 @@ public class QuestEventBridge : MonoBehaviour
     {
         if (parts.Length < 2) return;
 
-        string questId = parts[1];
         if (QuestManager.Instance != null)
         {
-            QuestManager.Instance.StartQuest(questId);
+            QuestManager.Instance.StartQuest(parts[1]);
         }
     }
 
@@ -76,23 +73,19 @@ public class QuestEventBridge : MonoBehaviour
     {
         if (parts.Length < 2) return;
 
-        string questId = parts[1];
         if (QuestManager.Instance != null)
         {
-            QuestManager.Instance.ForceCompleteQuest(questId);
+            QuestManager.Instance.ForceCompleteQuest(parts[1]);
         }
     }
 
-    private void HandleObjectiveComplete(string[] parts)
+    private void HandleQuestFail(string[] parts)
     {
-        if (parts.Length < 3) return;
-
-        string questId = parts[1];
-        string objectiveId = parts[2];
+        if (parts.Length < 2) return;
 
         if (QuestManager.Instance != null)
         {
-            QuestManager.Instance.CompleteObjective(questId, objectiveId);
+            QuestManager.Instance.FailQuest(parts[1]);
         }
     }
 
@@ -100,15 +93,12 @@ public class QuestEventBridge : MonoBehaviour
     {
         if (parts.Length < 4) return;
 
-        string questId = parts[1];
-        string objectiveId = parts[2];
-
         if (!int.TryParse(parts[3], out int amount))
             amount = 1;
 
         if (QuestManager.Instance != null)
         {
-            QuestManager.Instance.ProgressObjective(questId, objectiveId, amount);
+            QuestManager.Instance.ReportEvent(ObjectiveType.Custom, parts[2], amount);
         }
     }
 
@@ -116,11 +106,9 @@ public class QuestEventBridge : MonoBehaviour
     {
         if (parts.Length < 2) return;
 
-        string flagName = parts[1];
-
-        if (SaveManager.Instance != null)
+        if (QuestManager.Instance != null)
         {
-            SaveManager.Instance.CurrentSaveData.questData.SetStoryFlag(flagName, value);
+            QuestManager.Instance.SetStoryFlag(parts[1], value);
         }
     }
 }

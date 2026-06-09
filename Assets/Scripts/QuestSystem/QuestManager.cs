@@ -4,7 +4,8 @@ using UnityEngine;
 
 /// <summary>
 /// 퀘스트 상태 추적 및 진행 관리
-/// 대화 시스템, 인벤토리 등 외부 시스템은 이벤트로만 연결
+/// 외부 시스템과는 이벤트로만 연결 (직접 .Instance 참조 없음)
+/// 스토리 플래그를 자체 관리
 /// </summary>
 public class QuestManager : SingletonMonoBehaviour<QuestManager>, ISaveable
 {
@@ -26,8 +27,14 @@ public class QuestManager : SingletonMonoBehaviour<QuestManager>, ISaveable
     /// </summary>
     public event Action<string> OnQuestCompleted;
 
+    /// <summary>
+    /// 퀘스트 실패 시 발생 (questId)
+    /// </summary>
+    public event Action<string> OnQuestFailed;
+
     private readonly Dictionary<string, QuestData> questLookup = new Dictionary<string, QuestData>();
     private readonly Dictionary<string, QuestInstance> activeInstances = new Dictionary<string, QuestInstance>();
+    private readonly Dictionary<string, bool> storyFlags = new Dictionary<string, bool>();
 
     public string SaveId => "quest_manager";
 
@@ -36,6 +43,30 @@ public class QuestManager : SingletonMonoBehaviour<QuestManager>, ISaveable
     protected override void OnSingletonAwake()
     {
         BuildLookup();
+        SubscribeToGameEvents();
+    }
+
+    protected override void OnDestroy()
+    {
+        UnsubscribeFromGameEvents();
+        base.OnDestroy();
+    }
+
+    // -- Game Event Subscriptions (decoupled) --
+
+    private void SubscribeToGameEvents()
+    {
+        DialogueTriggerByID.OnNPCTalkedTo += HandleNPCTalkedTo;
+    }
+
+    private void UnsubscribeFromGameEvents()
+    {
+        DialogueTriggerByID.OnNPCTalkedTo -= HandleNPCTalkedTo;
+    }
+
+    private void HandleNPCTalkedTo(string npcId)
+    {
+        ReportEvent(ObjectiveType.Talk, npcId);
     }
 
     // -- Public API --
@@ -70,76 +101,10 @@ public class QuestManager : SingletonMonoBehaviour<QuestManager>, ISaveable
         return true;
     }
 
-    /// <summary>
-    /// 목표 진행 (수량 기반: Collect, Kill 등)
-    /// </summary>
-    public void ProgressObjective(string questId, string objectiveId, int amount = 1)
-    {
-        if (!activeInstances.TryGetValue(questId, out var instance))
-            return;
-
-        bool justCompleted = instance.ProgressObjective(objectiveId, amount);
-        int current = instance.GetProgress(objectiveId);
-        OnObjectiveProgressed?.Invoke(questId, objectiveId, current);
-
-        if (justCompleted)
-        {
-            TryAutoComplete(instance);
-        }
-    }
-
-    /// <summary>
-    /// 목표 즉시 완료 (Talk, GoTo 등 1회성)
-    /// </summary>
-    public void CompleteObjective(string questId, string objectiveId)
-    {
-        if (!activeInstances.TryGetValue(questId, out var instance))
-            return;
-
-        bool justCompleted = instance.CompleteObjective(objectiveId);
-
-        if (justCompleted)
-        {
-            OnObjectiveProgressed?.Invoke(questId, objectiveId, instance.GetProgress(objectiveId));
-            TryAutoComplete(instance);
-        }
-    }
-
-    /// <summary>
-    /// 퀘스트 강제 완료
-    /// </summary>
-    public void ForceCompleteQuest(string questId)
-    {
-        if (!activeInstances.TryGetValue(questId, out var instance))
-            return;
-
-        CompleteQuest(instance);
-    }
-
-    /// <summary>
-    /// 퀘스트 실패 처리
-    /// </summary>
-    public void FailQuest(string questId)
-    {
-        if (!activeInstances.TryGetValue(questId, out var instance))
-            return;
-
-        instance.Fail();
-        OnQuestStateChanged?.Invoke(questId, QuestState.Failed);
-    }
-
     // -- Event Reporting --
 
     /// <summary>
     /// 게임 내 행동 발생 시 호출. 모든 활성 퀘스트의 목표와 자동 대조.
-    /// 
-    /// 사용 예시:
-    ///   NPC 대화 완료:  ReportEvent(ObjectiveType.Talk, "npc_herbalist")
-    ///   맵 도착:        ReportEvent(ObjectiveType.GoTo, "cave_entrance")
-    ///   아이템 획득:    ReportEvent(ObjectiveType.Collect, "herb_red", 1)
-    ///   아이템 전달:    ReportEvent(ObjectiveType.Deliver, "npc_herbalist:herb_bundle")
-    ///   적 처치:        ReportEvent(ObjectiveType.Kill, "slime", 1)
-    ///   커스텀:         ReportEvent(ObjectiveType.Custom, "lever_pulled")
     /// </summary>
     public void ReportEvent(ObjectiveType type, string targetId, int amount = 1)
     {
@@ -164,6 +129,42 @@ public class QuestManager : SingletonMonoBehaviour<QuestManager>, ISaveable
                 TryAutoComplete(instance);
             }
         }
+    }
+
+    /// <summary>
+    /// 퀘스트 강제 완료
+    /// </summary>
+    public void ForceCompleteQuest(string questId)
+    {
+        if (!activeInstances.TryGetValue(questId, out var instance))
+            return;
+
+        CompleteQuest(instance);
+    }
+
+    /// <summary>
+    /// 퀘스트 실패 처리
+    /// </summary>
+    public void FailQuest(string questId)
+    {
+        if (!activeInstances.TryGetValue(questId, out var instance))
+            return;
+
+        instance.Fail();
+        OnQuestStateChanged?.Invoke(questId, QuestState.Failed);
+        OnQuestFailed?.Invoke(questId);
+    }
+
+    // -- Story Flags (자체 관리, SaveManager 비의존) --
+
+    public void SetStoryFlag(string key, bool value)
+    {
+        storyFlags[key] = value;
+    }
+
+    public bool GetStoryFlag(string key)
+    {
+        return storyFlags.TryGetValue(key, out bool value) && value;
     }
 
     // -- Query --
@@ -213,16 +214,27 @@ public class QuestManager : SingletonMonoBehaviour<QuestManager>, ISaveable
     public void CaptureState(SaveData saveData)
     {
         saveData.questData.questEntries.Clear();
+        saveData.questData.storyFlags.Clear();
 
         foreach (var kvp in activeInstances)
         {
             saveData.questData.questEntries.Add(kvp.Value.ToSaveEntry());
+        }
+
+        foreach (var kvp in storyFlags)
+        {
+            saveData.questData.storyFlags.Add(new StoryFlagEntry
+            {
+                key = kvp.Key,
+                value = kvp.Value
+            });
         }
     }
 
     public void RestoreState(SaveData saveData)
     {
         activeInstances.Clear();
+        storyFlags.Clear();
 
         foreach (var entry in saveData.questData.questEntries)
         {
@@ -233,6 +245,11 @@ public class QuestManager : SingletonMonoBehaviour<QuestManager>, ISaveable
             var instance = new QuestInstance(data);
             instance.RestoreFromSaveEntry(entry);
             activeInstances[entry.questId] = instance;
+        }
+
+        foreach (var flag in saveData.questData.storyFlags)
+        {
+            storyFlags[flag.key] = flag.value;
         }
     }
 
@@ -266,13 +283,10 @@ public class QuestManager : SingletonMonoBehaviour<QuestManager>, ISaveable
                 return false;
         }
 
-        if (SaveManager.Instance != null)
+        foreach (var flag in data.prerequisiteFlags)
         {
-            foreach (var flag in data.prerequisiteFlags)
-            {
-                if (!SaveManager.Instance.CurrentSaveData.questData.GetStoryFlag(flag))
-                    return false;
-            }
+            if (!GetStoryFlag(flag))
+                return false;
         }
 
         return true;
@@ -293,9 +307,9 @@ public class QuestManager : SingletonMonoBehaviour<QuestManager>, ISaveable
     {
         instance.Complete();
 
-        if (!string.IsNullOrEmpty(instance.Data.completionFlag) && SaveManager.Instance != null)
+        if (!string.IsNullOrEmpty(instance.Data.completionFlag))
         {
-            SaveManager.Instance.CurrentSaveData.questData.SetStoryFlag(instance.Data.completionFlag, true);
+            SetStoryFlag(instance.Data.completionFlag, true);
         }
 
         OnQuestStateChanged?.Invoke(instance.Data.questId, QuestState.Completed);
