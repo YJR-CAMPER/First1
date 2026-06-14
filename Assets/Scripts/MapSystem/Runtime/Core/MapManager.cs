@@ -59,6 +59,10 @@ namespace MapSystem.Core
         [SerializeField] private MapContainer mapContainer;
         [SerializeField] private Transform playerTransform;
         
+        [Header("맵 레지스트리")]
+        [Tooltip("mapId로 MapData를 조회하는 레지스트리 (세이브 복원용)")]
+        [SerializeField] private MapRegistry mapRegistry;
+        
         [Header("전환 효과")]
         [SerializeField] private MonoBehaviour transitionEffectComponent;
         private ITransitionEffect transitionEffect;
@@ -206,6 +210,29 @@ namespace MapSystem.Core
             {
                 IsTransitioning = false;
             }
+        }
+        
+        /// <summary>
+        /// mapId로 맵을 비동기 로드한다 (세이브 복원용). 성공 시 true.
+        /// 레지스트리에서 MapData를 조회한 뒤 LoadMapAsync에 위임한다.
+        /// </summary>
+        public async Task<bool> LoadMapByIdAsync(string mapId, string spawnPointId = null)
+        {
+            if (mapRegistry == null)
+            {
+                Debug.LogError("[MapManager] MapRegistry가 할당되지 않았습니다.");
+                return false;
+            }
+            
+            var targetMap = mapRegistry.GetById(mapId);
+            if (targetMap == null)
+            {
+                Debug.LogError($"[MapManager] mapId '{mapId}'에 해당하는 맵을 찾을 수 없습니다.");
+                return false;
+            }
+            
+            await LoadMapAsync(targetMap, spawnPointId);
+            return true;
         }
         
         /// <summary>

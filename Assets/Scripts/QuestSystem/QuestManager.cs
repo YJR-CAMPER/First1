@@ -44,11 +44,13 @@ public class QuestManager : SingletonMonoBehaviour<QuestManager>, ISaveable
     {
         BuildLookup();
         SubscribeToGameEvents();
+        SaveManager.Register(this);
     }
 
     protected override void OnDestroy()
     {
         UnsubscribeFromGameEvents();
+        SaveManager.Unregister(this);
         base.OnDestroy();
     }
 

@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
@@ -23,6 +25,30 @@ public class SaveManager : SingletonMonoBehaviour<SaveManager>
     public int MaxSlots => maxSlots;
 
     protected override bool Persist => true;
+
+    // ISaveable 레지스트리.
+    // FindObjectsOfType는 비활성 오브젝트를 누락하므로, 구현체가 직접 등록/해제한다.
+    private static readonly List<ISaveable> saveables = new List<ISaveable>();
+
+    /// <summary>
+    /// Enter Play Mode(도메인 리로드 비활성) 옵션 대비 정적 상태 초기화
+    /// </summary>
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        saveables.Clear();
+    }
+
+    public static void Register(ISaveable saveable)
+    {
+        if (saveable != null && !saveables.Contains(saveable))
+            saveables.Add(saveable);
+    }
+
+    public static void Unregister(ISaveable saveable)
+    {
+        saveables.Remove(saveable);
+    }
 
     protected override void OnSingletonAwake()
     {
@@ -60,7 +86,11 @@ public class SaveManager : SingletonMonoBehaviour<SaveManager>
         }
     }
 
-    public bool Load(int slotIndex)
+    /// <summary>
+    /// 세이브 슬롯을 비동기 로드한다.
+    /// 맵을 먼저 복원한 뒤(위치 복원의 선행 조건) 나머지 상태를 복원한다.
+    /// </summary>
+    public async Task<bool> LoadAsync(int slotIndex)
     {
         if (!ValidateSlotIndex(slotIndex))
             return false;
@@ -78,7 +108,12 @@ public class SaveManager : SingletonMonoBehaviour<SaveManager>
             string json = File.ReadAllText(filePath);
             currentSaveData = JsonUtility.FromJson<SaveData>(json);
 
+            // 1. 맵 먼저 비동기 복원 (플레이어 위치 복원의 선행 조건)
+            await RestoreMapAsync();
+
+            // 2. 맵 로드 완료 후 나머지 상태 동기 복원
             RestoreAllStates();
+
             sessionStartTime = Time.realtimeSinceStartup - currentSaveData.metadata.playTime;
             OnLoadCompleted?.Invoke(slotIndex);
             return true;
@@ -131,26 +166,37 @@ public class SaveManager : SingletonMonoBehaviour<SaveManager>
 
     private void CaptureAllStates()
     {
-        var saveables = FindObjectsOfType<MonoBehaviour>();
-        foreach (var mb in saveables)
+        foreach (var saveable in saveables)
         {
-            if (mb is ISaveable saveable)
-            {
-                saveable.CaptureState(currentSaveData);
-            }
+            saveable.CaptureState(currentSaveData);
         }
     }
 
     private void RestoreAllStates()
     {
-        var saveables = FindObjectsOfType<MonoBehaviour>();
-        foreach (var mb in saveables)
+        foreach (var saveable in saveables)
         {
-            if (mb is ISaveable saveable)
-            {
-                saveable.RestoreState(currentSaveData);
-            }
+            saveable.RestoreState(currentSaveData);
         }
+    }
+
+    /// <summary>
+    /// 저장된 mapId가 현재 맵과 다를 때만 Addressables 맵을 전환한다.
+    /// </summary>
+    private async Task RestoreMapAsync()
+    {
+        string mapId = currentSaveData.playerData.currentMapId;
+        if (string.IsNullOrEmpty(mapId))
+            return;
+
+        var mapManager = MapSystem.Core.MapManager.Instance;
+        if (mapManager == null)
+            return;
+
+        if (mapManager.CurrentMap != null && mapManager.CurrentMap.mapId == mapId)
+            return;
+
+        await mapManager.LoadMapByIdAsync(mapId);
     }
 
     private void UpdateMetadata(int slotIndex)

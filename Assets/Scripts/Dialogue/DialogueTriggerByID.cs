@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Events;
 
 /// <summary>
 /// NPC에 부착하여 ID 기반으로 대화를 시작하는 트리거
@@ -88,13 +89,27 @@ public class DialogueTriggerByID : MonoBehaviour
             return;
         }
 
+        // 대화 완료 시점에 통보하도록 예약 (시작 시점이 아님)
+        if (!string.IsNullOrEmpty(npcId))
+            RegisterTalkReport();
+
         DialogueManager.Instance.StartDialogue(dialogue);
         hasTriggered = true;
+    }
 
-        if (!string.IsNullOrEmpty(npcId))
+    /// <summary>
+    /// 대화 종료 시 OnNPCTalkedTo를 1회만 발화한 뒤 자기 리스너를 해제한다.
+    /// </summary>
+    private void RegisterTalkReport()
+    {
+        UnityAction handler = null;
+        handler = () =>
         {
             OnNPCTalkedTo?.Invoke(npcId);
-        }
+            if (DialogueManager.Instance != null)
+                DialogueManager.Instance.OnDialogueEnd.RemoveListener(handler);
+        };
+        DialogueManager.Instance.OnDialogueEnd.AddListener(handler);
     }
 
     public void SetDialogueId(string newDialogueId)

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 /// <summary>
 /// 탑뷰 이동 컨트롤러 (SOLID 원칙 준수)
@@ -189,6 +189,16 @@ public class TopDownMovementController : MonoBehaviour,
     // ========== Public Getters ==========
 
     public Vector2 GetFacingDirection() => lastDirection;
+
+    /// <summary>
+    /// 바라보는 방향을 직접 설정한다 (세이브 복원 등).
+    /// 다음 UpdateAnimation에서 Animator에 반영된다.
+    /// </summary>
+    public void SetFacingDirection(Vector2 direction)
+    {
+        if (direction != Vector2.zero)
+            lastDirection = direction.normalized;
+    }
 
     public void SetUse8Directions(bool use8)
     {

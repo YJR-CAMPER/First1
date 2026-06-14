@@ -1,10 +1,10 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 /// <summary>
 /// 일시정지 메뉴 UI 컨트롤러
-/// Resume, Settings, Save, Load, MainMenu, Quit 버튼 관리
+/// Resume, Settings, Save/Load, MainMenu, Quit 버튼 관리
 /// </summary>
 public class PauseMenuUI : MonoBehaviour
 {
@@ -18,8 +18,7 @@ public class PauseMenuUI : MonoBehaviour
     [Header("Buttons")]
     [SerializeField] private Button resumeButton;
     [SerializeField] private Button settingsButton;
-    [SerializeField] private Button saveButton;
-    [SerializeField] private Button loadButton;
+    [SerializeField] private Button saveLoadButton;
     [SerializeField] private Button mainMenuButton;
     [SerializeField] private Button quitButton;
 
@@ -92,11 +91,8 @@ public class PauseMenuUI : MonoBehaviour
         if (settingsButton != null)
             settingsButton.onClick.AddListener(OnSettingsClicked);
 
-        if (saveButton != null)
-            saveButton.onClick.AddListener(OnSaveClicked);
-
-        if (loadButton != null)
-            loadButton.onClick.AddListener(OnLoadClicked);
+        if (saveLoadButton != null)
+            saveLoadButton.onClick.AddListener(OnSaveLoadClicked);
 
         if (mainMenuButton != null)
             mainMenuButton.onClick.AddListener(OnMainMenuClicked);
@@ -177,22 +173,13 @@ public class PauseMenuUI : MonoBehaviour
             settingsPanel.SetActive(true);
     }
 
-    private void OnSaveClicked()
+    private void OnSaveLoadClicked()
     {
         if (pauseMenuPanel != null)
             pauseMenuPanel.SetActive(false);
 
         if (saveLoadUI != null)
             saveLoadUI.OpenSave();
-    }
-
-    private void OnLoadClicked()
-    {
-        if (pauseMenuPanel != null)
-            pauseMenuPanel.SetActive(false);
-
-        if (saveLoadUI != null)
-            saveLoadUI.OpenLoad();
     }
 
     public void CloseSettings()
