@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a05b8f660bf8b8449a8832d50f06aab0, type: 3}
+  m_Name: SmallRoom
+  m_EditorClassIdentifier: 
+  mapId: 00
+  displayName: SmallRoom
+  mapPrefab:
+    m_AssetGUID: cf673e1623dcda248b603a653459d315
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
+  bgm: {fileID: 0}
+  spawnPoints:
+  - pointId: Spawn
+    position: {x: 2.3, y: 0}
+    facingDirection: 0

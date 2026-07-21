@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -186,17 +186,33 @@ public class SaveManager : SingletonMonoBehaviour<SaveManager>
     private async Task RestoreMapAsync()
     {
         string mapId = currentSaveData.playerData.currentMapId;
+        Debug.Log($"[로드진단] 1. 저장된 mapId = '{mapId}'");
+
         if (string.IsNullOrEmpty(mapId))
+        {
+            Debug.LogWarning("[로드진단] mapId가 비어서 맵 복원 건너뜀");
             return;
+        }
 
         var mapManager = MapSystem.Core.MapManager.Instance;
         if (mapManager == null)
+        {
+            Debug.LogWarning("[로드진단] MapManager.Instance가 null");
             return;
+        }
+
+        string currentId = mapManager.CurrentMap != null ? mapManager.CurrentMap.mapId : "(null)";
+        Debug.Log($"[로드진단] 2. 현재 떠있는 맵 = '{currentId}', 전환중? {mapManager.IsTransitioning}");
 
         if (mapManager.CurrentMap != null && mapManager.CurrentMap.mapId == mapId)
+        {
+            Debug.LogWarning($"[로드진단] 이미 같은 맵('{mapId}')이라 맵 로드 건너뜀");
             return;
+        }
 
-        await mapManager.LoadMapByIdAsync(mapId);
+        Debug.Log($"[로드진단] 3. LoadMapByIdAsync('{mapId}') 호출 시작");
+        bool result = await mapManager.LoadMapByIdAsync(mapId, currentSaveData.playerData.lastSpawnPointId);
+        Debug.Log($"[로드진단] 4. LoadMapByIdAsync 결과 = {result}");
     }
 
     private void UpdateMetadata(int slotIndex)

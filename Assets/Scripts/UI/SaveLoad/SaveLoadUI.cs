@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
@@ -47,11 +47,17 @@ public class SaveLoadUI : MonoBehaviour
     /// </summary>
     public event System.Action OnBackRequested;
 
+    /// <summary>
+    /// 패널이 열려있는지 (PauseMenuUI의 ESC 분기에서 사용)
+    /// </summary>
+    public bool IsOpen => saveLoadPanel != null && saveLoadPanel.activeSelf;
+
     private void Awake()
     {
         SetupButtons();
         InitializeSlots();
         HideConfirm();
+        Hide();
     }
 
     private void SetupButtons()
@@ -186,20 +192,24 @@ public class SaveLoadUI : MonoBehaviour
         if (SaveManager.Instance == null)
             return;
 
-        bool success = await SaveManager.Instance.LoadAsync(slotIndex);
-        if (success)
+        try
         {
-            HideConfirm();
-            Hide();
-
-            if (PauseManager.Instance != null)
+            bool success = await SaveManager.Instance.LoadAsync(slotIndex);
+            if (success)
             {
-                PauseManager.Instance.Resume();
-            }
+                HideConfirm();
+                Hide();
 
-            // 맵 복원은 LoadAsync 내부의 Addressables 맵 로드로 처리된다.
-            // 과거에는 여기서 SceneManager.LoadScene을 호출했으나,
-            // 복원 직후 씬을 새로 로드하면 복원 상태가 날아가는 버그였으므로 제거함.
+                if (PauseManager.Instance != null)
+                {
+                    PauseManager.Instance.Resume();
+                }
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[SaveLoadUI] Load failed: {e.Message}");
+            HideConfirm();
         }
     }
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -14,7 +14,7 @@ namespace MapSystem.Core
     public class MapManager : MonoBehaviour
     {
         #region Singleton
-        
+
         private static MapManager instance;
         public static MapManager Instance
         {
@@ -31,66 +31,72 @@ namespace MapSystem.Core
                 return instance;
             }
         }
-        
+
         #endregion
-        
+
         #region 이벤트
-        
+
         /// <summary>
         /// 맵 전환 시작 시 발생 (UI 등에서 구독)
         /// </summary>
         public event Action<MapData> OnMapTransitionStart;
-        
+
         /// <summary>
         /// 맵 전환 완료 시 발생
         /// </summary>
         public event Action<MapData> OnMapTransitionComplete;
-        
+
         /// <summary>
         /// 맵 로딩 진행률 (0~1)
         /// </summary>
         public event Action<float> OnLoadProgress;
-        
+
         #endregion
-        
+
         #region 설정
-        
+
         [Header("필수 참조")]
         [SerializeField] private MapContainer mapContainer;
         [SerializeField] private Transform playerTransform;
-        
+
         [Header("맵 레지스트리")]
         [Tooltip("mapId로 MapData를 조회하는 레지스트리 (세이브 복원용)")]
         [SerializeField] private MapRegistry mapRegistry;
-        
+
+        [Header("시작 맵")]
+        [Tooltip("게임 시작 시 자동으로 로드할 맵. 비워두면 자동 로드하지 않음")]
+        [SerializeField] private MapData startMap;
+        [Tooltip("시작 맵의 스폰 포인트 ID (비워두면 기본 스폰)")]
+        [SerializeField] private string startSpawnPointId;
+
         [Header("전환 효과")]
         [SerializeField] private MonoBehaviour transitionEffectComponent;
         private ITransitionEffect transitionEffect;
-        
+
         [Header("디버그")]
         [SerializeField] private bool debugMode = false;
-        
+
         #endregion
-        
+
         #region 상태
-        
+
         /// <summary>
         /// 현재 로드된 맵 데이터
         /// </summary>
         public MapData CurrentMap => mapContainer?.CurrentMapData;
-        
+
         /// <summary>
         /// 맵 전환 중인지
         /// </summary>
         public bool IsTransitioning { get; private set; }
-        
+
         // Addressable 핸들 (언로드용)
         private AsyncOperationHandle<GameObject> currentMapHandle;
-        
+
         #endregion
-        
+
         #region Unity 생명주기
-        
+
         private void Awake()
         {
             // Singleton 설정
@@ -100,7 +106,7 @@ namespace MapSystem.Core
                 return;
             }
             instance = this;
-            
+
             // 전환 효과 인터페이스 가져오기
             if (transitionEffectComponent != null)
             {
@@ -111,7 +117,24 @@ namespace MapSystem.Core
                 }
             }
         }
-        
+
+        private async void Start()
+        {
+            // 시작 맵이 지정되어 있으면 자동 로드
+            // 씬에 맵을 직접 배치하는 대신 MapContainer를 통해 관리하여
+            // 맵 전환 시 일관된 언로드가 가능하게 함
+            if (startMap != null)
+            {
+                if (mapContainer != null && mapContainer.HasLoadedMap)
+                {
+                    Log("시작 맵이 이미 로드되어 있어 자동 로드를 건너뜁니다.");
+                    return;
+                }
+
+                await LoadMapAsync(startMap, startSpawnPointId);
+            }
+        }
+
         private void OnDestroy()
         {
             // Addressable 핸들 정리
@@ -119,17 +142,17 @@ namespace MapSystem.Core
             {
                 Addressables.Release(currentMapHandle);
             }
-            
+
             if (instance == this)
             {
                 instance = null;
             }
         }
-        
+
         #endregion
-        
+
         #region Public API
-        
+
         /// <summary>
         /// 맵 전환 (기본 스폰 포인트 사용)
         /// </summary>
@@ -140,10 +163,10 @@ namespace MapSystem.Core
                 Debug.LogError("[MapManager] targetMap이 null입니다.");
                 return;
             }
-            
+
             await LoadMapAsync(targetMap, null);
         }
-        
+
         /// <summary>
         /// 맵 전환 (특정 스폰 포인트 지정)
         /// </summary>
@@ -154,51 +177,51 @@ namespace MapSystem.Core
                 Debug.LogError("[MapManager] targetMap이 null입니다.");
                 return;
             }
-            
+
             if (IsTransitioning)
             {
                 Debug.LogWarning("[MapManager] 이미 맵 전환 중입니다.");
                 return;
             }
-            
+
             IsTransitioning = true;
-            
+
             Log($"맵 전환 시작: {targetMap.displayName}");
-            
+
             try
             {
                 OnMapTransitionStart?.Invoke(targetMap);
-                
+
                 // 1. 페이드 아웃
                 if (transitionEffect != null)
                 {
                     await transitionEffect.PlayOutAsync();
                 }
-                
+
                 // 2. 기존 맵 언로드
                 await UnloadCurrentMapAsync();
-                
+
                 // 3. 새 맵 로드
                 await LoadMapInternalAsync(targetMap);
-                
+
                 // 4. 플레이어 위치 설정
                 SetPlayerPosition(targetMap, spawnPointId);
-                
+
                 // 5. BGM 변경 (있다면)
                 if (targetMap.bgm != null)
                 {
                     // TODO: AudioManager 연동
                     Log($"BGM 변경: {targetMap.bgm.name}");
                 }
-                
+
                 // 6. 페이드 인
                 if (transitionEffect != null)
                 {
                     await transitionEffect.PlayInAsync();
                 }
-                
+
                 OnMapTransitionComplete?.Invoke(targetMap);
-                
+
                 Log($"맵 전환 완료: {targetMap.displayName}");
             }
             catch (Exception e)
@@ -211,7 +234,7 @@ namespace MapSystem.Core
                 IsTransitioning = false;
             }
         }
-        
+
         /// <summary>
         /// mapId로 맵을 비동기 로드한다 (세이브 복원용). 성공 시 true.
         /// 레지스트리에서 MapData를 조회한 뒤 LoadMapAsync에 위임한다.
@@ -223,18 +246,18 @@ namespace MapSystem.Core
                 Debug.LogError("[MapManager] MapRegistry가 할당되지 않았습니다.");
                 return false;
             }
-            
+
             var targetMap = mapRegistry.GetById(mapId);
             if (targetMap == null)
             {
                 Debug.LogError($"[MapManager] mapId '{mapId}'에 해당하는 맵을 찾을 수 없습니다.");
                 return false;
             }
-            
+
             await LoadMapAsync(targetMap, spawnPointId);
             return true;
         }
-        
+
         /// <summary>
         /// 현재 맵 데이터 가져오기
         /// </summary>
@@ -242,35 +265,35 @@ namespace MapSystem.Core
         {
             return mapContainer?.CurrentMapData;
         }
-        
+
         #endregion
-        
+
         #region Private Methods
-        
+
         private async Task UnloadCurrentMapAsync()
         {
             if (mapContainer == null || !mapContainer.HasLoadedMap) return;
-            
+
             Log("기존 맵 언로드 중...");
-            
+
             // 기존 맵 오브젝트 파괴
             if (mapContainer.CurrentMapInstance != null)
             {
                 Destroy(mapContainer.CurrentMapInstance);
             }
-            
+
             // Addressable 핸들 해제
             if (currentMapHandle.IsValid())
             {
                 Addressables.Release(currentMapHandle);
             }
-            
+
             mapContainer.ClearMap();
-            
+
             // 가비지 컬렉션 여유 주기
             await Task.Yield();
         }
-        
+
         private async Task LoadMapInternalAsync(MapData mapData)
         {
             if (mapData.mapPrefab == null || !mapData.mapPrefab.RuntimeKeyIsValid())
@@ -278,28 +301,28 @@ namespace MapSystem.Core
                 Debug.LogError($"[MapManager] {mapData.mapId}의 mapPrefab이 유효하지 않습니다.");
                 return;
             }
-            
+
             Log($"맵 로드 중: {mapData.mapId}");
-            
+
             // Addressables로 비동기 로드
             currentMapHandle = Addressables.InstantiateAsync(
-                mapData.mapPrefab, 
+                mapData.mapPrefab,
                 mapContainer.MapRoot
             );
-            
+
             // 진행률 보고
             while (!currentMapHandle.IsDone)
             {
                 OnLoadProgress?.Invoke(currentMapHandle.PercentComplete);
                 await Task.Yield();
             }
-            
+
             if (currentMapHandle.Status == AsyncOperationStatus.Succeeded)
             {
                 GameObject mapInstance = currentMapHandle.Result;
                 mapContainer.SetMap(mapInstance, mapData);
                 OnLoadProgress?.Invoke(1f);
-                
+
                 Log($"맵 로드 성공: {mapData.mapId}");
             }
             else
@@ -307,7 +330,7 @@ namespace MapSystem.Core
                 Debug.LogError($"[MapManager] 맵 로드 실패: {mapData.mapId}");
             }
         }
-        
+
         private void SetPlayerPosition(MapData mapData, string spawnPointId)
         {
             if (playerTransform == null)
@@ -315,9 +338,9 @@ namespace MapSystem.Core
                 Debug.LogWarning("[MapManager] playerTransform이 할당되지 않았습니다.");
                 return;
             }
-            
+
             SpawnPoint spawn;
-            
+
             if (!string.IsNullOrEmpty(spawnPointId) && mapData.TryGetSpawnPoint(spawnPointId, out spawn))
             {
                 // 지정된 스폰 포인트 사용
@@ -327,13 +350,13 @@ namespace MapSystem.Core
                 // 기본 스폰 포인트 사용
                 spawn = mapData.GetDefaultSpawnPoint();
             }
-            
+
             playerTransform.position = new Vector3(spawn.position.x, spawn.position.y, playerTransform.position.z);
-            
+
             // TODO: 플레이어 방향 설정 (애니메이션 시스템 연동)
             Log($"플레이어 위치 설정: {spawn.position}, 방향: {spawn.facingDirection}");
         }
-        
+
         private void Log(string message)
         {
             if (debugMode)
@@ -341,11 +364,11 @@ namespace MapSystem.Core
                 Debug.Log($"[MapManager] {message}");
             }
         }
-        
+
         #endregion
-        
+
         #region 에디터 검증
-        
+
         private void OnValidate()
         {
             if (transitionEffectComponent != null && !(transitionEffectComponent is ITransitionEffect))
@@ -354,7 +377,7 @@ namespace MapSystem.Core
                 transitionEffectComponent = null;
             }
         }
-        
+
         #endregion
     }
 }

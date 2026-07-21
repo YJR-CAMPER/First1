@@ -103,7 +103,7 @@ public class PauseMenuUI : MonoBehaviour
 
     private void OnPauseInput()
     {
-        if (saveLoadUI != null && saveLoadUI.gameObject.activeInHierarchy)
+        if (saveLoadUI != null && saveLoadUI.IsOpen)
         {
             saveLoadUI.Hide();
             ShowPauseMenu();
@@ -175,18 +175,12 @@ public class PauseMenuUI : MonoBehaviour
 
     private void OnSaveLoadClicked()
     {
-        if (pauseMenuPanel != null)
-            pauseMenuPanel.SetActive(false);
-
         if (saveLoadUI != null)
             saveLoadUI.OpenSave();
     }
 
     public void CloseSettings()
     {
-        if (settingsPanel != null)
-            settingsPanel.SetActive(false);
-
         if (pauseMenuPanel != null)
             pauseMenuPanel.SetActive(true);
     }

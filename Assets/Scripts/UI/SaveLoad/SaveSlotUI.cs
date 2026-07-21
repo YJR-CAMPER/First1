@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
@@ -99,13 +99,16 @@ public class SaveSlotUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Load 모드에서 빈 슬롯은 비활성화
+    /// Load 모드에서 빈 슬롯은 비활성화, 그 외에는 활성화
     /// </summary>
     public void SetLoadMode(bool isLoadMode)
     {
-        if (slotButton != null && isLoadMode && !hasData)
-        {
-            slotButton.interactable = false;
-        }
+        if (slotButton == null)
+            return;
+
+        // Load 모드 + 데이터 없음 = 비활성화 (불러올 게 없음)
+        // 그 외 모든 경우 = 활성화
+        bool shouldDisable = isLoadMode && !hasData;
+        slotButton.interactable = !shouldDisable;
     }
 }
