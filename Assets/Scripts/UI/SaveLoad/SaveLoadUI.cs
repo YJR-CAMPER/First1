@@ -1,20 +1,16 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
 /// 세이브/로드 패널 UI
-/// Save/Load 모드 전환, 3슬롯 표시, 덮어쓰기 확인
-/// 
-/// Setup:
-///   PauseMenuUI에서 saveLoadPanel을 열어주는 버튼 추가
-///   또는 독립적으로 ESC 메뉴에 배치
+/// Save/Load 모드 전환, 3슬롯 표시
+/// 덮어쓰기/로드 확인은 공용 ConfirmDialog에 콜백으로 위임
 /// </summary>
 public class SaveLoadUI : MonoBehaviour
 {
     [Header("Panels")]
     [SerializeField] private GameObject saveLoadPanel;
-    [SerializeField] private GameObject confirmPanel;
 
     [Header("Slots")]
     [SerializeField] private SaveSlotUI[] slots;
@@ -26,11 +22,6 @@ public class SaveLoadUI : MonoBehaviour
     [SerializeField] private Image saveTabHighlight;
     [SerializeField] private Image loadTabHighlight;
 
-    [Header("Confirm Dialog")]
-    [SerializeField] private TextMeshProUGUI confirmText;
-    [SerializeField] private Button confirmYesButton;
-    [SerializeField] private Button confirmNoButton;
-
     [Header("Navigation")]
     [SerializeField] private Button backButton;
 
@@ -39,11 +30,9 @@ public class SaveLoadUI : MonoBehaviour
     [SerializeField] private Color inactiveTabColor = new Color(0.6f, 0.6f, 0.6f, 1f);
 
     private bool isSaveMode = true;
-    private int pendingSlotIndex = -1;
 
     /// <summary>
     /// 외부에서 패널을 닫을 때 호출할 콜백
-    /// PauseMenuUI에서 구독하여 이전 패널로 복귀
     /// </summary>
     public event System.Action OnBackRequested;
 
@@ -56,7 +45,6 @@ public class SaveLoadUI : MonoBehaviour
     {
         SetupButtons();
         InitializeSlots();
-        HideConfirm();
         Hide();
     }
 
@@ -67,12 +55,6 @@ public class SaveLoadUI : MonoBehaviour
 
         if (loadTabButton != null)
             loadTabButton.onClick.AddListener(() => SetMode(false));
-
-        if (confirmYesButton != null)
-            confirmYesButton.onClick.AddListener(OnConfirmYes);
-
-        if (confirmNoButton != null)
-            confirmNoButton.onClick.AddListener(HideConfirm);
 
         if (backButton != null)
             backButton.onClick.AddListener(OnBackClicked);
@@ -97,18 +79,12 @@ public class SaveLoadUI : MonoBehaviour
 
     // -- Public API --
 
-    /// <summary>
-    /// Save 모드로 패널 열기
-    /// </summary>
     public void OpenSave()
     {
         SetMode(true);
         Show();
     }
 
-    /// <summary>
-    /// Load 모드로 패널 열기
-    /// </summary>
     public void OpenLoad()
     {
         SetMode(false);
@@ -121,15 +97,12 @@ public class SaveLoadUI : MonoBehaviour
             saveLoadPanel.SetActive(true);
 
         RefreshAllSlots();
-        HideConfirm();
     }
 
     public void Hide()
     {
         if (saveLoadPanel != null)
             saveLoadPanel.SetActive(false);
-
-        HideConfirm();
     }
 
     // -- Mode --
@@ -160,22 +133,54 @@ public class SaveLoadUI : MonoBehaviour
         if (isSaveMode)
         {
             if (SaveManager.Instance.SlotExists(slotIndex))
-            {
-                ShowOverwriteConfirm(slotIndex);
-            }
+                RequestOverwriteConfirm(slotIndex);
             else
-            {
                 ExecuteSave(slotIndex);
-            }
         }
         else
         {
             if (SaveManager.Instance.SlotExists(slotIndex))
-            {
-                ShowLoadConfirm(slotIndex);
-            }
+                RequestLoadConfirm(slotIndex);
         }
     }
+
+    private void RequestOverwriteConfirm(int slotIndex)
+    {
+        string message = BuildSlotMessage(slotIndex, "덮어쓸까요?");
+
+        if (ConfirmDialog.Instance != null)
+        {
+            ConfirmDialog.Instance.Show(message, () => ExecuteSave(slotIndex));
+        }
+        else
+        {
+            // ConfirmDialog가 없으면 확인 없이 바로 실행 (안전 폴백)
+            ExecuteSave(slotIndex);
+        }
+    }
+
+    private void RequestLoadConfirm(int slotIndex)
+    {
+        string message = BuildSlotMessage(slotIndex, "불러올까요?");
+
+        if (ConfirmDialog.Instance != null)
+        {
+            ConfirmDialog.Instance.Show(message, () => ExecuteLoad(slotIndex));
+        }
+        else
+        {
+            ExecuteLoad(slotIndex);
+        }
+    }
+
+    private string BuildSlotMessage(int slotIndex, string action)
+    {
+        var meta = SaveManager.Instance.GetSlotMetadata(slotIndex);
+        string time = meta != null ? meta.timestamp : "";
+        return $"Slot {slotIndex + 1} ({time})\n\n{action}";
+    }
+
+    // -- Execution --
 
     private void ExecuteSave(int slotIndex)
     {
@@ -184,7 +189,6 @@ public class SaveLoadUI : MonoBehaviour
 
         SaveManager.Instance.Save(slotIndex);
         RefreshAllSlots();
-        HideConfirm();
     }
 
     private async void ExecuteLoad(int slotIndex)
@@ -197,77 +201,16 @@ public class SaveLoadUI : MonoBehaviour
             bool success = await SaveManager.Instance.LoadAsync(slotIndex);
             if (success)
             {
-                HideConfirm();
                 Hide();
 
                 if (PauseManager.Instance != null)
-                {
                     PauseManager.Instance.Resume();
-                }
             }
         }
         catch (System.Exception e)
         {
             Debug.LogError($"[SaveLoadUI] Load failed: {e.Message}");
-            HideConfirm();
         }
-    }
-
-    // -- Confirm Dialog --
-
-    private void ShowOverwriteConfirm(int slotIndex)
-    {
-        pendingSlotIndex = slotIndex;
-
-        if (confirmText != null)
-        {
-            var meta = SaveManager.Instance.GetSlotMetadata(slotIndex);
-            string time = meta != null ? meta.timestamp : "";
-            confirmText.text = $"Slot {slotIndex + 1} ({time})\n\nOverwrite?";
-        }
-
-        if (confirmPanel != null)
-            confirmPanel.SetActive(true);
-    }
-
-    private void ShowLoadConfirm(int slotIndex)
-    {
-        pendingSlotIndex = slotIndex;
-
-        if (confirmText != null)
-        {
-            var meta = SaveManager.Instance.GetSlotMetadata(slotIndex);
-            string time = meta != null ? meta.timestamp : "";
-            confirmText.text = $"Slot {slotIndex + 1} ({time})\n\nLoad?";
-        }
-
-        if (confirmPanel != null)
-            confirmPanel.SetActive(true);
-    }
-
-    private void OnConfirmYes()
-    {
-        if (pendingSlotIndex < 0)
-            return;
-
-        if (isSaveMode)
-        {
-            ExecuteSave(pendingSlotIndex);
-        }
-        else
-        {
-            ExecuteLoad(pendingSlotIndex);
-        }
-
-        pendingSlotIndex = -1;
-    }
-
-    private void HideConfirm()
-    {
-        pendingSlotIndex = -1;
-
-        if (confirmPanel != null)
-            confirmPanel.SetActive(false);
     }
 
     // -- Refresh --

@@ -39,10 +39,10 @@ MonoBehaviour:
     portrait: {fileID: 0}
     position: 0
     dialogueText: "\uC0B4\uB824\uC918!"
-    nextDialogueId: 
+    nextDialogueId: dialogue_24db8830
     eventName: 
     choices: []
-    nodePosition: {x: 391, y: -49}
+    nodePosition: {x: 390.85715, y: -49.142857}
   - id: dialogue_96d9e887
     speakerName: "\uAE40\uC544\uBB34\uAC1C"
     dialogueStyle: 0
@@ -52,4 +52,15 @@ MonoBehaviour:
     nextDialogueId: 
     eventName: 
     choices: []
-    nodePosition: {x: 391, y: 160}
+    nodePosition: {x: 390.85715, y: 160}
+  - id: dialogue_24db8830
+    speakerName: "\uB098\uB808\uC774\uC158"
+    dialogueStyle: 0
+    portrait: {fileID: 0}
+    position: 0
+    dialogueText: "<b><color=red>\uB2F9\uC2E0\uC740 \uAE40\uC544\uBB34\uAC1C\uB97C
+      \uC8FC\uACBC\uB2E4.</color></b>"
+    nextDialogueId: 
+    eventName: 
+    choices: []
+    nodePosition: {x: 590.8571, y: -48}
