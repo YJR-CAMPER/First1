@@ -245,7 +245,8 @@ public class DialogueGraphEditorWindow : EditorWindow
             speakerName = "New Speaker",
             dialogueText = "Enter dialogue text here...",
             dialogueStyle = DialogueStyleType.일반,
-            position = SpeakerPosition.Left,
+            slot = PortraitSlot.좌,
+            emotion = EmotionType.기본,
             choices = new List<DialogueChoiceExtended>(),
             nodePosition = new Vector2(100, 100)
         };

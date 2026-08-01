@@ -6,7 +6,7 @@ using UnityEngine.Events;
 
 /// <summary>
 /// 대화 시스템의 진행 흐름을 조율하는 매니저
-/// UI 표시, 타이핑, 초상화, 선택지는 각각의 헬퍼 클래스에 위임
+/// UI 표시, 타이핑, 초상화(3슬롯), 선택지는 각각의 헬퍼 클래스에 위임
 /// </summary>
 public class DialogueManager : SingletonMonoBehaviour<DialogueManager>
 {
@@ -18,11 +18,13 @@ public class DialogueManager : SingletonMonoBehaviour<DialogueManager>
     [SerializeField] private TextMeshProUGUI dialogueText;
     [SerializeField] private GameObject continueIcon;
 
-    [Header("Portrait UI")]
-    [SerializeField] private Image leftPortrait;
-    [SerializeField] private Image rightPortrait;
-    [SerializeField] private GameObject leftPortraitPanel;
-    [SerializeField] private GameObject rightPortraitPanel;
+    [Header("Portrait Stage (3 slots)")]
+    [SerializeField] private PortraitSlotView leftSlot;
+    [SerializeField] private PortraitSlotView centerSlot;
+    [SerializeField] private PortraitSlotView rightSlot;
+
+    [Header("Character Data")]
+    [SerializeField] private CharacterRegistry characterRegistry;
 
     [Header("Dialogue Styles")]
     [SerializeField] private DialogueStylePreset dialogueStylePreset;
@@ -47,7 +49,7 @@ public class DialogueManager : SingletonMonoBehaviour<DialogueManager>
     public UnityEvent<string> OnDialogueEvent;
 
     private DialogueTypingEffect typingEffect;
-    private DialoguePortraitController portraitController;
+    private DialoguePortraitStage portraitStage;
     private DialogueChoicePresenter choicePresenter;
 
     private DialogueNodeExtended currentDialogue;
@@ -65,10 +67,13 @@ public class DialogueManager : SingletonMonoBehaviour<DialogueManager>
         typingEffect = new DialogueTypingEffect(this, dialogueText, typingSpeed);
         typingEffect.OnTypingComplete += HandleTypingComplete;
 
-        portraitController = new DialoguePortraitController(
+        leftSlot?.Initialize();
+        centerSlot?.Initialize();
+        rightSlot?.Initialize();
+
+        portraitStage = new DialoguePortraitStage(
             this,
-            leftPortrait, rightPortrait,
-            leftPortraitPanel, rightPortraitPanel,
+            leftSlot, centerSlot, rightSlot,
             activeAlpha, inactiveAlpha, fadeDuration
         );
 
@@ -86,10 +91,6 @@ public class DialogueManager : SingletonMonoBehaviour<DialogueManager>
 
     // -- Public API --
 
-    /// <summary>
-    /// 새 대화를 시작한다 (OnDialogueStart 이벤트 1회 발화)
-    /// 대화 중 다음 노드로의 진행은 내부에서 처리
-    /// </summary>
     public void StartDialogue(DialogueNodeExtended dialogue)
     {
         if (dialogue == null)
@@ -108,19 +109,13 @@ public class DialogueManager : SingletonMonoBehaviour<DialogueManager>
 
     // -- Dialogue Display --
 
-    /// <summary>
-    /// 현재 노드를 화면에 표시한다
-    /// StartDialogue와 분리하여 OnDialogueStart 중복 발화를 방지
-    /// </summary>
     private void ShowDialogueNode(DialogueNodeExtended dialogue)
     {
         currentDialogue = dialogue;
 
-        if (speakerNameText != null)
-            speakerNameText.text = currentDialogue.speakerName;
-
+        UpdateSpeakerName();
         ApplyStyle(currentDialogue.dialogueStyle);
-        portraitController.UpdateForDialogue(currentDialogue.position, currentDialogue.portrait);
+        UpdatePortrait();
 
         if (dialogueText != null)
         {
@@ -142,6 +137,53 @@ public class DialogueManager : SingletonMonoBehaviour<DialogueManager>
         }
     }
 
+    /// <summary>
+    /// 화자 이름 갱신
+    /// characterId로 CharacterData를 찾으면 그 displayName을 우선 사용,
+    /// 없으면 노드의 speakerName을 폴백으로 사용
+    /// </summary>
+    private void UpdateSpeakerName()
+    {
+        if (speakerNameText == null)
+            return;
+
+        string name = currentDialogue.speakerName;
+
+        if (characterRegistry != null && !string.IsNullOrEmpty(currentDialogue.characterId))
+        {
+            var character = characterRegistry.GetById(currentDialogue.characterId);
+            if (character != null && !string.IsNullOrEmpty(character.displayName))
+                name = character.displayName;
+        }
+
+        speakerNameText.text = name;
+    }
+
+    /// <summary>
+    /// characterId + emotion으로 스프라이트를 조회하여 지정 슬롯에 표시
+    /// </summary>
+    private void UpdatePortrait()
+    {
+        if (portraitStage == null)
+            return;
+
+        if (currentDialogue.slot == PortraitSlot.없음)
+        {
+            portraitStage.HideAll();
+            return;
+        }
+
+        Sprite sprite = null;
+        if (characterRegistry != null && !string.IsNullOrEmpty(currentDialogue.characterId))
+        {
+            var character = characterRegistry.GetById(currentDialogue.characterId);
+            if (character != null)
+                sprite = character.GetEmotionSprite(currentDialogue.emotion);
+        }
+
+        portraitStage.ShowSpeaker(currentDialogue.slot, sprite, currentDialogue.effect);
+    }
+
     // -- Input Handling --
 
     private void Update()
@@ -155,13 +197,9 @@ public class DialogueManager : SingletonMonoBehaviour<DialogueManager>
         if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
         {
             if (typingEffect.IsTyping)
-            {
                 typingEffect.Skip();
-            }
             else
-            {
                 AdvanceDialogue();
-            }
         }
     }
 
@@ -209,18 +247,12 @@ public class DialogueManager : SingletonMonoBehaviour<DialogueManager>
     private void HandleChoiceSelected(DialogueChoiceExtended choice)
     {
         if (!string.IsNullOrEmpty(choice.eventName))
-        {
             OnDialogueEvent?.Invoke(choice.eventName);
-        }
 
         if (!string.IsNullOrEmpty(choice.nextDialogueId))
-        {
             ContinueToNextDialogue(choice.nextDialogueId);
-        }
         else
-        {
             EndDialogue();
-        }
     }
 
     private void EndDialogue()
@@ -228,6 +260,7 @@ public class DialogueManager : SingletonMonoBehaviour<DialogueManager>
         isDialogueActive = false;
         dialoguePanel.SetActive(false);
         choicePresenter.Hide();
+        portraitStage.HideAll();
 
         StopShake();
         OnDialogueEnd?.Invoke();
@@ -268,13 +301,9 @@ public class DialogueManager : SingletonMonoBehaviour<DialogueManager>
             dialoguePanelTransform.localScale = Vector3.one * style.panelScale;
 
         if (style.enableShake)
-        {
             StartShake(style.shakeIntensity);
-        }
         else
-        {
             StopShake();
-        }
     }
 
     private void StartShake(float intensity)

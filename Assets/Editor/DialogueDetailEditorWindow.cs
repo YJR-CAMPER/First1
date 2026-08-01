@@ -62,20 +62,31 @@ public class DialogueDetailEditorWindow : EditorWindow
         EditorGUI.BeginChangeCheck();
 
         currentDialogue.speakerName = EditorGUILayout.TextField(
-            "Speaker Name",
+            "Speaker Name (폴백)",
             currentDialogue.speakerName
         );
 
-        currentDialogue.portrait = (Sprite)EditorGUILayout.ObjectField(
-            "Portrait",
-            currentDialogue.portrait,
-            typeof(Sprite),
-            false
+        EditorGUILayout.Space(5);
+        EditorGUILayout.LabelField("Portrait", EditorStyles.boldLabel);
+
+        currentDialogue.characterId = EditorGUILayout.TextField(
+            "Character ID",
+            currentDialogue.characterId
         );
 
-        currentDialogue.position = (SpeakerPosition)EditorGUILayout.EnumPopup(
-            "Position",
-            currentDialogue.position
+        currentDialogue.emotion = (EmotionType)EditorGUILayout.EnumPopup(
+            "Emotion",
+            currentDialogue.emotion
+        );
+
+        currentDialogue.slot = (PortraitSlot)EditorGUILayout.EnumPopup(
+            "Slot",
+            currentDialogue.slot
+        );
+
+        currentDialogue.effect = (PortraitEffect)EditorGUILayout.EnumPopup(
+            "Effect",
+            currentDialogue.effect
         );
 
         EditorGUILayout.Space(5);

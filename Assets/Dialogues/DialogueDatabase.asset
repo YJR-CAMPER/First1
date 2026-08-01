@@ -13,54 +13,73 @@ MonoBehaviour:
   m_Name: DialogueDatabase
   m_EditorClassIdentifier: 
   dialogues:
-  - id: dialogue_c7ac34a7
-    speakerName: "\uAE40\uC544\uBB34\uAC1C"
+  - id: dialogue_c556401d
+    speakerName: "\uBCA0\uD2F0"
     dialogueStyle: 0
-    portrait: {fileID: 0}
-    position: 0
-    dialogueText: "\uC548\uB155 \uB09C \uAE40\uC544\uBB34\uAC1C\uC57C"
+    characterId: A1
+    emotion: 0
+    slot: 1
+    effect: 0
+    dialogueText: "\uC548\uB155!"
+    nextDialogueId: dialogue_68f112c7
+    eventName: 
+    choices: []
+    nodePosition: {x: 100, y: 100}
+  - id: dialogue_68f112c7
+    speakerName: "\uBCA0\uD2F0"
+    dialogueStyle: 0
+    characterId: A1
+    emotion: 0
+    slot: 1
+    effect: 0
+    dialogueText: "<b>\uB09C \uBCA0\uD2F0\uB77C\uACE0 \uD574.</b>"
+    nextDialogueId: dialogue_7376785d
+    eventName: 
+    choices: []
+    nodePosition: {x: 317, y: 101}
+  - id: dialogue_7376785d
+    speakerName: "\uBCA0\uD2F0"
+    dialogueStyle: 0
+    characterId: A1
+    emotion: 0
+    slot: 1
+    effect: 0
+    dialogueText: "\uB124 \uC774\uB984\uC740 \uBB50\uC57C?"
     nextDialogueId: 
     eventName: 
     choices:
-    - choiceText: "\uC8FD\uC778\uB2E4"
-      nextDialogueId: dialogue_86546c52
+    - choiceText: "\uB2F5\uD55C\uB2E4"
+      nextDialogueId: dialogue_f26c833c
       eventName: 
       conditionFlag: 
       requiredValue: 1
-    - choiceText: "\uC0B4\uB9B0\uB2E4"
-      nextDialogueId: dialogue_96d9e887
+    - choiceText: "\uB2F5\uD558\uC9C0 \uC54A\uB294\uB2E4"
+      nextDialogueId: dialogue_3a3b68b1
       eventName: 
       conditionFlag: 
       requiredValue: 1
-    nodePosition: {x: 100, y: 100}
-  - id: dialogue_86546c52
-    speakerName: "\uAE40\uC544\uBB34\uAC1C"
+    nodePosition: {x: 508, y: 100}
+  - id: dialogue_3a3b68b1
+    speakerName: "\uBCA0\uD2F0"
     dialogueStyle: 0
-    portrait: {fileID: 0}
-    position: 0
-    dialogueText: "\uC0B4\uB824\uC918!"
-    nextDialogueId: dialogue_24db8830
-    eventName: 
-    choices: []
-    nodePosition: {x: 390.85715, y: -49.142857}
-  - id: dialogue_96d9e887
-    speakerName: "\uAE40\uC544\uBB34\uAC1C"
-    dialogueStyle: 0
-    portrait: {fileID: 0}
-    position: 0
-    dialogueText: "\uACE0\uB9C8\uC6CC~"
+    characterId: 
+    emotion: 0
+    slot: 1
+    effect: 0
+    dialogueText: "\uB10C \uBD80\uB044\uB7FC\uC7C1\uC774\uAD6C\uB098!"
     nextDialogueId: 
     eventName: 
     choices: []
-    nodePosition: {x: 390.85715, y: 160}
-  - id: dialogue_24db8830
-    speakerName: "\uB098\uB808\uC774\uC158"
+    nodePosition: {x: 857, y: 281}
+  - id: dialogue_f26c833c
+    speakerName: "\uBCA0\uD2F0"
     dialogueStyle: 0
-    portrait: {fileID: 0}
-    position: 0
-    dialogueText: "<b><color=red>\uB2F9\uC2E0\uC740 \uAE40\uC544\uBB34\uAC1C\uB97C
-      \uC8FC\uACBC\uB2E4.</color></b>"
+    characterId: A1
+    emotion: 0
+    slot: 1
+    effect: 0
+    dialogueText: "\uB124 \uC774\uB984\uC740 \uC774\uC81C \uC54C\uACA0\uC5B4!"
     nextDialogueId: 
     eventName: 
     choices: []
-    nodePosition: {x: 590.8571, y: -48}
+    nodePosition: {x: 854, y: 0}

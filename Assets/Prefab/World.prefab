@@ -221,7 +221,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3000b4dc0c1f8840bd1ab7ab8975d39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dialogueId: dialogue_c7ac34a7
+  dialogueId: dialogue_c556401d
   npcId: 
   canRepeat: 1
   interactKey: 101
