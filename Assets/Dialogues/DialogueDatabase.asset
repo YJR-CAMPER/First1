@@ -62,13 +62,13 @@ MonoBehaviour:
   - id: dialogue_3a3b68b1
     speakerName: "\uBCA0\uD2F0"
     dialogueStyle: 0
-    characterId: 
+    characterId: A1
     emotion: 0
     slot: 1
     effect: 0
     dialogueText: "\uB10C \uBD80\uB044\uB7FC\uC7C1\uC774\uAD6C\uB098!"
     nextDialogueId: 
-    eventName: 
+    eventName: flag_set:met_bettyshy
     choices: []
     nodePosition: {x: 857, y: 281}
   - id: dialogue_f26c833c
@@ -80,6 +80,130 @@ MonoBehaviour:
     effect: 0
     dialogueText: "\uB124 \uC774\uB984\uC740 \uC774\uC81C \uC54C\uACA0\uC5B4!"
     nextDialogueId: 
-    eventName: 
+    eventName: flag_set:met_betty_knowyourname
     choices: []
     nodePosition: {x: 854, y: 0}
+  - id: dialogue_1d682b12
+    speakerName: "\uBC85"
+    dialogueStyle: 0
+    characterId: B1
+    emotion: 0
+    slot: 1
+    effect: 0
+    dialogueText: "\uC2E4\uB840\uAC00 \uB418\uC9C0 \uC54A\uB294\uB2E4\uBA74, \uBCA0\uD2F0\uC5D0\uAC8C
+      \uB098\uC911\uC5D0 \uD55C\uBC88 \uC774\uC57C\uAE30\uD558\uC790\uACE0 \uC804\uD574\uC918."
+    nextDialogueId: 
+    eventName: quest_start:tq1
+    choices: []
+    nodePosition: {x: 312, y: 730}
+  - id: dialogue_b12a9239
+    speakerName: B1
+    dialogueStyle: 0
+    characterId: 
+    emotion: 0
+    slot: 1
+    effect: 0
+    dialogueText: "\uBBF8\uC548\uD558\uC9C0\uB9CC \uADF8 \uC678\uC5D4 \uBCFC\uC77C\uC774
+      \uC5C6\uC5B4."
+    nextDialogueId: 
+    eventName: 
+    choices: []
+    nodePosition: {x: 100, y: 730}
+  - id: dialogue_56100bf4
+    speakerName: "\uBC85"
+    dialogueStyle: 0
+    characterId: 
+    emotion: 0
+    slot: 1
+    effect: 0
+    dialogueText: "\uC774\uC57C\uAE30 \uB300\uC2E0 \uC804\uD574\uC918\uC11C \uACE0\uB9D9\uAD70."
+    nextDialogueId: 
+    eventName: 
+    choices: []
+    nodePosition: {x: 632, y: 730}
+  - id: dialogue_333e5506
+    speakerName: "\uBCA0\uD2F0"
+    dialogueStyle: 0
+    characterId: A1
+    emotion: 0
+    slot: 1
+    effect: 0
+    dialogueText: "\uC548\uB155! \uBB34\uC2A8 \uC77C\uC774\uC57C?"
+    nextDialogueId: 
+    eventName: 
+    choices:
+    - choiceText: "\uBC85\uC774 \uC774\uC57C\uAE30 \uC880 \uD558\uC7AC"
+      nextDialogueId: dialogue_a1f944f5
+      eventName: 
+      conditionFlag: 
+      requiredValue: 1
+    - choiceText: "\uB108\uB97C \uCC3E\uB294 \uC0AC\uB78C\uC774 \uC788\uB294 \uAC83
+        \uAC19\uC544"
+      nextDialogueId: dialogue_60bae18b
+      eventName: 
+      conditionFlag: 
+      requiredValue: 1
+    nodePosition: {x: 101, y: -193}
+  - id: dialogue_a1f944f5
+    speakerName: "\uBCA0\uD2F0"
+    dialogueStyle: 0
+    characterId: A1
+    emotion: 0
+    slot: 1
+    effect: 0
+    dialogueText: "\uBC85\uC774? \uC54C\uACA0\uC5B4. \uB098\uC911\uC5D0 \uAC04\uB2E4\uACE0
+      \uC804\uD574!"
+    nextDialogueId: 
+    eventName: 
+    choices: []
+    nodePosition: {x: 494, y: -351}
+  - id: dialogue_60bae18b
+    speakerName: "\uBCA0\uD2F0"
+    dialogueStyle: 0
+    characterId: A1
+    emotion: 0
+    slot: 1
+    effect: 0
+    dialogueText: "\uB204\uAD6C? \uC544, \uBC85\uC774\uACA0\uAD6C\uB098. \uC54C\uACA0\uC5B4.
+      \uBC85\uC5D0\uAC8C \uACE7 \uAC04\uB2E4\uACE0 \uC804\uD574\uC918."
+    nextDialogueId: 
+    eventName: 
+    choices: []
+    nodePosition: {x: 494, y: -140}
+  - id: dialogue_3490d3a8
+    speakerName: "\uBC85"
+    dialogueStyle: 0
+    characterId: B1
+    emotion: 0
+    slot: 1
+    effect: 0
+    dialogueText: "\uC54C\uC558\uC73C\uBA74 \uBE68\uB9AC \uC6C0\uC9C1\uC5EC."
+    nextDialogueId: 
+    eventName: 
+    choices: []
+    nodePosition: {x: 100, y: 976}
+  - id: dialogue_82121a8d
+    speakerName: "\uBCA0\uD2F0"
+    dialogueStyle: 0
+    characterId: A1
+    emotion: 0
+    slot: 1
+    effect: 0
+    dialogueText: "\uB610 \uBCF4\uB124! \uAD81\uAE08\uD55C \uAC70 \uC788\uC5B4?"
+    nextDialogueId: 
+    eventName: 
+    choices: []
+    nodePosition: {x: 101, y: 317}
+  - id: dialogue_5986b533
+    speakerName: "\uBCA0\uD2F0"
+    dialogueStyle: 0
+    characterId: A1
+    emotion: 0
+    slot: 1
+    effect: 0
+    dialogueText: "\uC548\uB155 \uBD80\uB044\uB7FC\uC7C1\uC774! \uC544\uC9C1\uB3C4
+      \uC774\uB984 \uC54C\uB824\uC8FC\uAE30 \uC2EB\uC5B4?"
+    nextDialogueId: 
+    eventName: 
+    choices: []
+    nodePosition: {x: 274, y: 317}

@@ -46,7 +46,7 @@ GameObject:
   - component: {fileID: 2753469471336446957}
   - component: {fileID: 442518561126591343}
   - component: {fileID: 9122813613584337352}
-  - component: {fileID: 3669221297454340277}
+  - component: {fileID: 6012458735195479838}
   m_Layer: 0
   m_Name: TestNPC
   m_TagString: Untagged
@@ -209,7 +209,7 @@ MonoBehaviour:
   promptText: "[E]\uB85C \uC0C1\uD638\uC791\uC6A9"
   promptCanvas: {fileID: 7960465570195293171}
   promptTextComponent: {fileID: 7647730548961733125}
---- !u!114 &3669221297454340277
+--- !u!114 &6012458735195479838
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -218,12 +218,36 @@ MonoBehaviour:
   m_GameObject: {fileID: 348443895082609472}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e3000b4dc0c1f8840bd1ab7ab8975d39, type: 3}
+  m_Script: {fileID: 11500000, guid: aa0e9e90a0923d242b75c4c510e23eb9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dialogueId: dialogue_c556401d
-  npcId: 
-  canRepeat: 1
+  npcId: npc_betty
+  bindings:
+  - questId: 
+    requiredState: 0
+    requiredCompletedObjective: 
+    requiredIncompleteObjective: 
+    requiredFlag: met_betty_knowyourname
+    requiredFlagValue: 1
+    dialogueId: dialogue_82121a8d
+    startsQuestId: 
+  - questId: 
+    requiredState: 0
+    requiredCompletedObjective: 
+    requiredIncompleteObjective: 
+    requiredFlag: met_bettyshy
+    requiredFlagValue: 1
+    dialogueId: dialogue_5986b533
+    startsQuestId: 
+  - questId: tq1
+    requiredState: 1
+    requiredCompletedObjective: 
+    requiredIncompleteObjective: 
+    requiredFlag: 
+    requiredFlagValue: 0
+    dialogueId: dialogue_333e5506
+    startsQuestId: 
+  defaultDialogueId: dialogue_c556401d
   interactKey: 101
   interactRange: 2
   interactPrompt: {fileID: 5644326605499378095}

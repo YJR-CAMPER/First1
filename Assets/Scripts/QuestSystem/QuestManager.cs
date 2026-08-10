@@ -59,11 +59,13 @@ public class QuestManager : SingletonMonoBehaviour<QuestManager>, ISaveable
     private void SubscribeToGameEvents()
     {
         DialogueTriggerByID.OnNPCTalkedTo += HandleNPCTalkedTo;
+        QuestDialogueTrigger.OnNPCTalkedTo += HandleNPCTalkedTo;
     }
 
     private void UnsubscribeFromGameEvents()
     {
         DialogueTriggerByID.OnNPCTalkedTo -= HandleNPCTalkedTo;
+        QuestDialogueTrigger.OnNPCTalkedTo -= HandleNPCTalkedTo;
     }
 
     private void HandleNPCTalkedTo(string npcId)

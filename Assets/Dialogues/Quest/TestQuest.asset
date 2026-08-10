@@ -12,10 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5dd7fa08076410044a778d979144e220, type: 3}
   m_Name: TestQuest
   m_EditorClassIdentifier: 
-  questId: 
+  questId: tq1
   questName: 
   description: 
-  objectives: []
+  objectives:
+  - objectiveId: Talkto_betty
+    type: 0
+    description: 
+    targetId: npc_betty
+    requiredAmount: 0
+    requirePreviousComplete: 0
   prerequisiteQuestIds: []
   prerequisiteFlags: []
   completionFlag: 
